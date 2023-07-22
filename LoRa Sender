@@ -1,0 +1,48 @@
+#include <SPI.h>
+#include <LoRa.h>
+
+// Define the pins used by the LoRa transceiver module
+#define ss 5      // Slave Select pin
+#define rst 14    // Reset pin
+#define dio0 2    // Digital IO pin 0
+
+int counter = 0; // Variable to keep track of the packet counter
+
+void setup() {
+  // Initialize Serial Monitor for debugging
+  Serial.begin(115200);
+  while (!Serial);
+  Serial.println("LoRa Sender");
+
+  // Setup LoRa transceiver module with the defined pins
+  LoRa.setPins(ss, rst, dio0);
+
+  // Set the LoRa frequency to 866 MHz for Europe (change according to your region)
+  // 433E6 for Asia, 915E6 for North America, etc.
+  while (!LoRa.begin(866E6)) {
+    Serial.println(".");
+    delay(500);
+  }
+
+  // Change the sync word (0xF3) to match the receiver's sync word
+  // The sync word assures you don't get LoRa messages from other LoRa transceivers
+  // The sync word ranges from 0-0xFF
+  LoRa.setSyncWord(0xF3);
+
+  Serial.println("LoRa Initializing OK!");
+}
+
+void loop() {
+  Serial.print("Sending packet: ");
+  Serial.println(counter);
+
+  // Send LoRa packet to the receiver
+  LoRa.beginPacket();
+  LoRa.print("hello "); // The message to be sent
+  LoRa.print(counter);  // Include the packet counter in the message
+  LoRa.endPacket();     // Finish sending the packet
+
+  counter++; // Increment the packet counter for the next message
+
+  delay(10000); // Wait for 10 seconds before sending the next packet
+}
